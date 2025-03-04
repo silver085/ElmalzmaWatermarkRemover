@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import time
 import datetime
-import fitz
 import sys
 import os
 
@@ -63,26 +62,6 @@ def print_usage():
 	exit(1)
 
 
-#Extracts images from pdf and apply the process for them
-def import_pdf(filename, iterations, threshold):
-	input = fitz.open(filename)	#input file	
-	print('Starting task for pdf file `' + filename + '`')
-	output_folder = output_foldername()
-	os.mkdir(output_folder)
-	n = 1
-	for i in range(len(input)):#Each page
-		for img in input.getPageImageList(i):#Each image in that page
-			xref = img[0]
-			pix = fitz.Pixmap(input, xref)
-			if pix.n >= 5:       # CMYK: convert to RGB first
-				pix = fitz.Pixmap(fitz.csRGB, pix)              
-
-			data = np.fromstring(pix.getPNGData(), np.uint8) #convert to raw bytes
-			I = cv2.imdecode(data, cv2.IMREAD_UNCHANGED) #decode
-			I = remove_watermark(I, iterations, threshold) #remove watermark
-			cv2.imwrite(os.path.join(output_folder, 'pdf_'+str(n)+'.jpg'), I)
-			print('Image #'+str(n)+'/'+str(len(input)))
-			n = n + 1
 
 #apply the process for images in directory
 def import_folder(foldername, iterations, threshold):
@@ -158,9 +137,7 @@ if __name__ == "__main__":
 	filename, mode, th, it = parse_args()
 
 	start = time.time()
-	if mode=='pdf':
-		import_pdf(filename, iterations = it, threshold = th)
-	elif mode=='folder':
+	if mode=='folder':
 		import_folder(filename, iterations = it, threshold = th)
 	elif mode=='file':
 		import_file(filename, iterations = it, threshold = th)
